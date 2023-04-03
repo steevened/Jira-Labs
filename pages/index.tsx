@@ -9,7 +9,7 @@ const HomePage: NextPageWithLayout = () => {
     <Grid container spacing={2}>
       {/* item */}
       <Grid item xs={12} sm={4}>
-        <Card sx={{ height: 'calc(100vh - 100px)' }}>
+        <Card sx={{ height: 'calc(100vh - 85px)' }}>
           <CardHeader title="Pendings" />
 
           {/* add new entry */}
@@ -20,14 +20,14 @@ const HomePage: NextPageWithLayout = () => {
       </Grid>
       {/* item */}
       <Grid item xs={12} sm={4}>
-        <Card sx={{ height: 'calc(100vh - 100px)' }}>
+        <Card sx={{ height: 'calc(100vh - 85px)' }}>
           <CardHeader title="in Progress" />
           <EntryList status="in-progress" />
         </Card>
       </Grid>
       {/* item */}
       <Grid item xs={12} sm={4}>
-        <Card sx={{ height: 'calc(100vh - 100px)' }}>
+        <Card sx={{ height: 'calc(100vh - 85px)' }}>
           <CardHeader title="Finished" />
           <EntryList status="finished" />
         </Card>
