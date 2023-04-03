@@ -1,3 +1,4 @@
+import { EntriesProvider } from '@/context/entries';
 import { UIProvider } from '@/context/ui';
 import '@/styles/globals.css';
 import { darkTheme, lightTheme } from '@/themes';
@@ -17,11 +18,13 @@ type AppPropsWithLayout = AppProps & {
 export default function App({ Component, pageProps }: AppPropsWithLayout) {
   const getLayout = Component.getLayout ?? ((page) => page);
   return (
-    <UIProvider>
-      <ThemeProvider theme={darkTheme}>
-        <CssBaseline />
-        {getLayout(<Component {...pageProps} />)}
-      </ThemeProvider>
-    </UIProvider>
+    <EntriesProvider>
+      <UIProvider>
+        <ThemeProvider theme={darkTheme}>
+          <CssBaseline />
+          {getLayout(<Component {...pageProps} />)}
+        </ThemeProvider>
+      </UIProvider>
+    </EntriesProvider>
   );
 }
