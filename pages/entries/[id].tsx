@@ -35,6 +35,7 @@ import { GetServerSideProps } from 'next';
 import { dbEntries } from '@/database';
 import { EntriesContext } from '@/context/entries';
 import { useRouter } from 'next/router';
+import { dateFunctions } from '@/utils';
 
 const validStatus: EntryStatus[] = ['pending', 'in-progress', 'finished'];
 
@@ -93,7 +94,12 @@ const EntryPage: NextPageWithLayout<Props> = ({ entry }) => {
       <Grid container justifyContent="center" sx={{ marginTop: 2 }}>
         <Grid item xs={12} sm={9} md={6}>
           <Card>
-            <CardHeader title={`Entry`} subheader={`Created ... minutes ago`} />
+            <CardHeader
+              title={`Entry`}
+              subheader={`Created ${dateFunctions.getFormatDistanceFromNow(
+                entry.createdAt
+              )} ago`}
+            />
             <CardContent>
               <TextField
                 sx={{ marginBottom: 4 }}
@@ -159,10 +165,10 @@ const EntryPage: NextPageWithLayout<Props> = ({ entry }) => {
             color="secondary"
             onClick={() => setIsOpenDeleteModal(false)}
           >
-            Disagree
+            Cancel
           </Button>
           <Button variant="outlined" color="error" onClick={onDelete} autoFocus>
-            Agree
+            Confirm
           </Button>
         </DialogActions>
       </Dialog>
