@@ -1,4 +1,10 @@
-import React, { ChangeEvent, ReactElement, useMemo, useState } from 'react';
+import React, {
+  ChangeEvent,
+  ReactElement,
+  useContext,
+  useMemo,
+  useState,
+} from 'react';
 import { NextPageWithLayout } from '../_app';
 import { Layout } from '@/components/layouts';
 import {
@@ -7,6 +13,11 @@ import {
   CardActions,
   CardContent,
   CardHeader,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   FormControl,
   FormControlLabel,
   FormLabel,
@@ -19,14 +30,28 @@ import {
 } from '@mui/material';
 import DoneIcon from '@mui/icons-material/Done';
 import Delete from '@mui/icons-material/DeleteForeverOutlined';
-import { EntryStatus } from '@/interfaces';
+import { Entry, EntryStatus } from '@/interfaces';
+import { GetServerSideProps } from 'next';
+import { dbEntries } from '@/database';
+import { EntriesContext } from '@/context/entries';
+import { useRouter } from 'next/router';
 
 const validStatus: EntryStatus[] = ['pending', 'in-progress', 'finished'];
 
-const EntryPage: NextPageWithLayout = () => {
-  const [inputValue, setInputValue] = useState('');
-  const [status, setStatus] = useState<EntryStatus>('pending');
+interface Props {
+  entry: Entry;
+}
+
+const EntryPage: NextPageWithLayout<Props> = ({ entry }) => {
+  // console.log(entry);
+  const { updateEntry, deleteEntry } = useContext(EntriesContext);
+  const router = useRouter();
+
+  const [inputValue, setInputValue] = useState(entry.description);
+  const [status, setStatus] = useState<EntryStatus>(entry.status);
   const [touched, setTouched] = useState(false);
+
+  const [isOpenDeleteModal, setIsOpenDeleteModal] = useState(false);
 
   const isNotValidForm = useMemo(
     () => inputValue.length <= 0 && touched,
@@ -43,7 +68,24 @@ const EntryPage: NextPageWithLayout = () => {
   };
 
   const onSave = () => {
-    console.log({ inputValue, status });
+    if (inputValue.trim().length <= 0) return;
+
+    const updatedEntry: Entry = {
+      ...entry,
+      status,
+      description: inputValue,
+    };
+    // console.log(updatedEntry);
+
+    updateEntry(updatedEntry, true);
+    router.push('/');
+  };
+
+  const onDelete = () => {
+    deleteEntry(entry._id, true);
+    router.push('/');
+    console.log('trying to delete');
+    setIsOpenDeleteModal(false);
   };
 
   return (
@@ -51,10 +93,7 @@ const EntryPage: NextPageWithLayout = () => {
       <Grid container justifyContent="center" sx={{ marginTop: 2 }}>
         <Grid item xs={12} sm={9} md={6}>
           <Card>
-            <CardHeader
-              title={`Entry: ${inputValue}`}
-              subheader={`Created ... minutes ago`}
-            />
+            <CardHeader title={`Entry`} subheader={`Created ... minutes ago`} />
             <CardContent>
               <TextField
                 sx={{ marginBottom: 4 }}
@@ -62,7 +101,7 @@ const EntryPage: NextPageWithLayout = () => {
                 autoFocus
                 multiline
                 value={inputValue}
-                label="New Entry"
+                label="Entry"
                 onChange={onTextFieldChange}
                 error={isNotValidForm}
                 onBlur={() => setTouched(true)}
@@ -101,7 +140,35 @@ const EntryPage: NextPageWithLayout = () => {
         </Grid>
       </Grid>
 
+      <Dialog
+        open={isOpenDeleteModal}
+        onClose={() => setIsOpenDeleteModal(false)}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">Delete Entry?</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Are you sure you want to delete this entry? This action cannot be
+            undone and all associated data will be permanently removed.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            variant="outlined"
+            color="secondary"
+            onClick={() => setIsOpenDeleteModal(false)}
+          >
+            Disagree
+          </Button>
+          <Button variant="outlined" color="error" onClick={onDelete} autoFocus>
+            Agree
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <IconButton
+        onClick={() => setIsOpenDeleteModal(true)}
         sx={{ position: 'fixed', bottom: 30, right: 30 }}
         color="error"
       >
@@ -111,8 +178,31 @@ const EntryPage: NextPageWithLayout = () => {
   );
 };
 
+export const getServerSideProps: GetServerSideProps = async ({ params }) => {
+  const { id } = params as { id: string };
+
+  const entry = await dbEntries.getEntryById(id);
+
+  if (!entry) {
+    return {
+      redirect: {
+        destination: '/',
+        permanent: false,
+      },
+    };
+  }
+
+  return {
+    props: { entry },
+  };
+};
+
 EntryPage.getLayout = (page: ReactElement) => {
-  return <Layout title="...">{page}</Layout>;
+  return (
+    <Layout title={page.props.entry.description.substring(0, 15) + '...'}>
+      {page}
+    </Layout>
+  );
 };
 
 export default EntryPage;

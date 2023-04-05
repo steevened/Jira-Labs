@@ -1,7 +1,7 @@
 import { FC, PropsWithChildren, useEffect, useReducer } from 'react';
 import { EntriesContext, entriesReducer } from './';
 import { Entry } from '@/interfaces';
-
+import { useSnackbar } from 'notistack';
 import { entriesApi } from '@/apis';
 
 export interface EntriesState {
@@ -14,6 +14,7 @@ const Entries_INITIAL_STATE: EntriesState = {
 
 export const EntriesProvider: FC<PropsWithChildren> = ({ children }) => {
   const [state, dispatch] = useReducer(entriesReducer, Entries_INITIAL_STATE);
+  const { enqueueSnackbar } = useSnackbar();
 
   const addNewEntry = async (description: string) => {
     try {
@@ -27,7 +28,7 @@ export const EntriesProvider: FC<PropsWithChildren> = ({ children }) => {
     }
   };
 
-  const updateEntry = async (entry: Entry) => {
+  const updateEntry = async (entry: Entry, showSnackBar = false) => {
     const { description, status } = entry;
     const updatedEntry = { description, status };
     try {
@@ -36,9 +37,44 @@ export const EntriesProvider: FC<PropsWithChildren> = ({ children }) => {
         updatedEntry
       );
       dispatch({ type: '[Entry] Entry-Updated', payload: data });
+
+      // show snackbar
+
+      if (showSnackBar) {
+        enqueueSnackbar('Entry Updated', {
+          variant: 'success',
+          autoHideDuration: 1500,
+          anchorOrigin: {
+            vertical: 'top',
+            horizontal: 'right',
+          },
+        });
+      }
     } catch (error) {
       console.log({ error });
     }
+  };
+
+  const deleteEntry = async (id: string, showSnackBar = false) => {
+    try {
+      const { data } = await entriesApi.delete(`/entries/${id}`);
+      // console.log(data);
+      dispatch({ type: '[Entry] Delete-Entry', payload: data });
+      if (showSnackBar) {
+        enqueueSnackbar('Entry Deleted', {
+          variant: 'success',
+          autoHideDuration: 1500,
+          anchorOrigin: {
+            vertical: 'top',
+            horizontal: 'right',
+          },
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    }
+
+    // console.log('delete entry with id ' + id);
   };
 
   const refreshEntries = async () => {
@@ -57,6 +93,7 @@ export const EntriesProvider: FC<PropsWithChildren> = ({ children }) => {
         // methods
         addNewEntry,
         updateEntry,
+        deleteEntry,
       }}
     >
       {children}

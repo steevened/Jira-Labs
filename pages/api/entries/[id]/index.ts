@@ -21,6 +21,8 @@ export default function handler(
 
     case 'PUT':
       return updateEntry(req, res);
+    case 'DELETE':
+      return deleteEntry(req, res);
 
     default:
       return res.status(400).json({ message: 'Invalid endpoint' });
@@ -79,6 +81,23 @@ const updateEntry = async (req: NextApiRequest, res: NextApiResponse<Data>) => {
     );
     await db.disconnect();
     res.status(200).json(updatedEntry!);
+  } catch (error: any) {
+    await db.disconnect();
+    res.status(400).json({ message: error.errors.status.message });
+  }
+
+  await db.disconnect();
+};
+
+const deleteEntry = async (req: NextApiRequest, res: NextApiResponse<Data>) => {
+  const { id } = req.query;
+
+  await db.connect();
+
+  try {
+    const entryToDelete = await Entry.findByIdAndRemove(id);
+    await db.disconnect();
+    res.status(200).json(entryToDelete!);
   } catch (error: any) {
     await db.disconnect();
     res.status(400).json({ message: error.errors.status.message });
