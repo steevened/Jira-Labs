@@ -16,6 +16,9 @@ export default function handler(
   }
 
   switch (req.method) {
+    case 'GET':
+      return getEntryById(req, res);
+
     case 'PUT':
       return updateEntry(req, res);
 
@@ -23,6 +26,31 @@ export default function handler(
       return res.status(400).json({ message: 'Invalid endpoint' });
   }
 }
+
+// get by id
+const getEntryById = async (
+  req: NextApiRequest,
+  res: NextApiResponse<Data>
+) => {
+  const { id } = req.query;
+
+  await db.connect();
+
+  try {
+    const entryById = await Entry.findById(id);
+
+    if (!entryById) {
+      await db.disconnect();
+      return res.status(400).json({ message: 'Invalid ID' });
+    }
+    await db.disconnect();
+    res.status(200).json(entryById);
+  } catch (error) {}
+
+  await db.disconnect();
+};
+
+// update
 const updateEntry = async (req: NextApiRequest, res: NextApiResponse<Data>) => {
   const { id } = req.query;
 
