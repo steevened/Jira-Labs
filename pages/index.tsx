@@ -75,7 +75,7 @@ const HomePage: NextPageWithLayout = () => {
         sx={{ position: 'fixed', bottom: 20, right: 20 }}
         size="medium"
         color="secondary"
-        aria-label="add"
+        
       >
         <AddIcon />
       </Fab>
